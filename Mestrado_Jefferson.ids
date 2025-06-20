@@ -1,0 +1,158 @@
+<ids:ids xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/1.0/ids.xsd" xmlns:ids="http://standards.buildingsmart.org/IDS">
+  <!--edited with usBIM.IDSeditor 2.3.8.0 (http://www.accasoftware.com)-->
+  <ids:info>
+    <ids:title>JeffMasters</ids:title>
+    <ids:version>1</ids:version>
+    <ids:description>Pré Verificação do Code Checking </ids:description>
+    <ids:author>jeffersonalvesepc@gmail.com</ids:author>
+    <ids:date>2025-05-04</ids:date>
+    <ids:purpose>Pré Verificação do Code Checking </ids:purpose>
+  </ids:info>
+  <ids:specifications>
+    <ids:specification ifcVersion="IFC4" name="Especificação 01" identifier="01" description="Todas as vigas precisam possuir PredefinedType como BEAM">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCBEAM</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCBEAM</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>BEAM</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4" name="Especificação 02" identifier="02" description="Todas as Lajes devem possuir PredefinedType como BASELAB ou FlOOR ou ROOF">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCSLAB</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCSLAB</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BASESLAB" />
+              <xs:enumeration value="FLOOR" />
+              <xs:enumeration value="ROOF" />
+            </xs:restriction>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4" name="Especificação 03" description="Todos os Pilares devem possuir PredefinedType como COLUMN">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCCOLUMN</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCCOLUMN</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>COLUMN</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4" name="Especificação 04" description="Todas as barras de aço devem ter ObjectyType preenchido como MAIN ou LIGATURE ">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCREINFORCINGBAR</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:attribute cardinality="required">
+          <ids:name>
+            <ids:simpleValue>ObjectType</ids:simpleValue>
+          </ids:name>
+          <ids:value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="MAIN" />
+              <xs:enumeration value="LIGATURE" />
+            </xs:restriction>
+          </ids:value>
+        </ids:attribute>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4" name="Especificação 05" description="Todas as barras de aço precisam ter a propriedade de NominalDiameter no  Pset_ReinforcingBarCommon">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCREINFORCINGBAR</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:property dataType="IFCPOSITIVELENGTHMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_ReinforcingBarCommon</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>NominalDiameter</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4" name="Especificação 06" description="Todos os Diametros devem ser em Milímetros " instructions="Para isso, vamos definir um valor de intervalo de 5 até 35.">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCREINFORCINGBAR</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:property dataType="IFCPOSITIVELENGTHMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_ReinforcingBarCommon</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>NominalDiameter</ids:simpleValue>
+          </ids:baseName>
+          <ids:value>
+            <xs:restriction base="xs:double">
+              <xs:minExclusive value="5" />
+              <xs:maxExclusive value="35" />
+            </xs:restriction>
+          </ids:value>
+        </ids:property>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4" name="Especificação 07" description="As barras de aço devem ser exportadas como elementos individuais, não como um elemento único em grupos.">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCREINFORCINGBAR</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:partOf relation="IFCRELASSIGNSTOGROUP" cardinality="prohibited">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCREINFORCINGBAR</ids:simpleValue>
+            </ids:name>
+          </ids:entity>
+        </ids:partOf>
+      </ids:requirements>
+    </ids:specification>
+  </ids:specifications>
+</ids:ids>
