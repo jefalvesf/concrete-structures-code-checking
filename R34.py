@@ -1,6 +1,8 @@
+#REGRA R34
 import ifcopenshell
 import ifcopenshell.geom
 import numpy as np
+import pandas as pd
 
 # Função para filtrar vértices do plano superior da laje
 
@@ -32,37 +34,64 @@ def verificar_clashes_laje(clash):
         contagem_clashes_laje[b_global_id]['clashes'] += 1
 
 
-# Função para verificar a espessura da laje
+# Função para verificar espessura da laje
 """
-Se a função encontrar uma inconformidade, ela vai retornar o GlobalID da laje e espessura, se não, ela não retorna nada.
+Se a função encontrar uma inconformidade, ela vai retornar o GlobalID da laje e espessura, além de salvar 
+essas inconformidades na variável de registro de todas inconformidades.
+Se não encontrar, ela também retorna essa informação.
 """
 
 
 def verificar_espessura_laje(laje, em_balanco):
     tipo_predefinido = laje.PredefinedType
+    espessura = None
+
     if hasattr(laje, "Representation"):
         for representacao in laje.Representation.Representations:
+            print(
+                f"Verificando representação: {representacao.RepresentationType}")
             if representacao.RepresentationType == "SweptSolid":
                 for item in representacao.Items:
                     if item.is_a("IfcExtrudedAreaSolid"):
                         perfil = item.SweptArea
-                        if perfil.is_a("IfcRectangleProfileDef"):
-                            espessura = item.Depth
-                            # Verificação de espessura com base no tipo de laje
-                            if tipo_predefinido == "ROOF" and espessura < 0.07:
-                                return laje.GlobalId
-                            elif tipo_predefinido == "BASESLAB" and espessura < 0.08:
-                                return laje.GlobalId
-                            elif tipo_predefinido == "FLOOR":
-                                if em_balanco and espessura < 0.10:
-                                    return laje.GlobalId
-                                elif not em_balanco and espessura < 0.08:
-                                    return laje.GlobalId
-    return None
+                        # Profundidade da extrusão (espessura da laje)
+                        profundidade = item.Depth
+                        print(
+                            f"Espessura encontrada (extrusão): {profundidade}")
+                        espessura = profundidade
+
+                        # Verificação de espessura com base no tipo de laje
+                        if tipo_predefinido == "ROOF" and espessura < 0.07:
+                            # Registro de inconformidade para ROOF
+                            todas_inconformidades_espessura.append(
+                                (laje.GlobalId, espessura))
+                            return laje.GlobalId, espessura  # Retorna com erro
+
+                        elif tipo_predefinido == "BASESLAB" and espessura < 0.08:
+                            # Registro de inconformidade para BASESLAB
+                            todas_inconformidades_espessura.append(
+                                (laje.GlobalId, espessura))
+                            return laje.GlobalId, espessura  # Retorna com erro
+
+                        elif tipo_predefinido == "FLOOR":
+                            if em_balanco and espessura < 0.10:
+                                # Registro de inconformidade para FLOOR em balanço
+                                todas_inconformidades_espessura.append(
+                                    (laje.GlobalId, espessura))
+                                return laje.GlobalId, espessura  # Retorna com erro
+                            elif not em_balanco and espessura < 0.08:
+                                # Registro de inconformidade para FLOOR não em balanço
+                                todas_inconformidades_espessura.append(
+                                    (laje.GlobalId, espessura))
+                                return laje.GlobalId, espessura  # Retorna com erro
+                            else:
+                                return laje.GlobalId, espessura
+    # Se não encontrar, retorna None
+    return laje.GlobalId, espessura
 
 
 # Carregar o arquivo IFC
-local_file = r"C:/Users/jeffe/Downloads/RELATIONSHIP_RVT25.ifc"
+local_file = r"XXXX"
 ifc_file = ifcopenshell.open(local_file)
 
 # Inicializar o tree usando triangulação
@@ -82,9 +111,13 @@ lajes_base = []
 lajes_roof = []
 contagem_clashes_laje = {}  # Dicionário para contar clashes por laje
 formas_lajes = {}  # Dicionário para armazenar as formas geométricas das lajes
-todas_inconformidades_espessura = []  # variável para armazenar as informodiades
+# variável para armazenar as inconformidades
+todas_inconformidades_espessura = []
+lajes_espessura_ok = []  # Variável agora definida
 lajes_verificadas = []  # variável para armazenar as lajes verificadas
+lajes_ja_verificadas = set()  # Novo: conjunto para evitar duplicidade
 
+# Inicia o iterador da geometria, para processar e armazenar as lajes em variáveis
 """
 Nesta etapa, inicia-se o iterador da geometrica, para processar e armazenar as lajes em variáveis.
 """
@@ -127,13 +160,11 @@ clashes = tree.clash_clearance_many(
 for clash in clashes:
     verificar_clashes_laje(clash)
 
-
 # Verificar lajes em balanço e espessuras
 """
 A verificação da laje em balanço necessida de uma lógica maior, pois não é explicito a informação 
 de que a laje está em balanço. 
 """
-
 for laje in lajes_floor:
     laje_id = laje.GlobalId
     if laje_id in formas_lajes:
@@ -145,35 +176,45 @@ for laje in lajes_floor:
         if laje_id in contagem_clashes_laje:
             num_clashes = contagem_clashes_laje[laje_id]['clashes']
             contagem_clashes_laje[laje_id]['vertices'] = quantidade_vertices
-            # Aqui de fato entra a lógica se está em balanço ou não, se tem apoio em todos os vértices ou não
             em_balanco = num_clashes < quantidade_vertices
 
             # Verificar a espessura da laje EM BALANÇO
-            inconformidade = verificar_espessura_laje(laje, em_balanco)
-            if inconformidade:
-                todas_inconformidades_espessura.append(inconformidade)
+            resultado, espessura = verificar_espessura_laje(laje, em_balanco)
+            if espessura is not None:
+                if resultado in todas_inconformidades_espessura:
+                    todas_inconformidades_espessura.append(
+                        (resultado, espessura))
+                else:
+                    lajes_espessura_ok.append((laje.GlobalId, espessura))
 
-            # Imprimir a verificação de balanço e espessura
-            print(
-                f"Laje {laje_id}: {quantidade_vertices} vértices (superior), {num_clashes} clashes")
-            if em_balanco:
-                print(f"Laje {laje_id} está em balanço")
-            else:
-                print(f"Laje {laje_id} não está em balanço")
-        lajes_verificadas.append(laje_id)
+            # Adicionando espessura
+            lajes_verificadas.append((laje_id, espessura))
+            lajes_ja_verificadas.add(laje_id)  # Marcando como verificada
 
-
-# Verificar espessuras das lajes de ROOF e BASESLAB
-
+# Verificar espessuras das lajes que não estão em balanço
 """
 A verificação de lajes maciças padrão é mais simples, não é necessário realizar contagem de clashes,
 apenas chaamar a função de verificar a espessura das lajes. Se a inconformidade for encontrada, ele da um apend no ID da laje
 """
-for laje in lajes_roof + lajes_base:
-    inconformidade = verificar_espessura_laje(laje, em_balanco=False)
-    if inconformidade:
-        todas_inconformidades_espessura.append(inconformidade)
-    lajes_verificadas.append(laje.GlobalId)
+for laje in lajes_roof + lajes_base + lajes_floor:
+    if laje.GlobalId in lajes_ja_verificadas:
+        continue  # Pular lajes já verificadas no balanço
+
+    if laje.GlobalId in formas_lajes:
+        vertices_superiores = obter_vertices_superiores(
+            formas_lajes[laje.GlobalId].geometry.verts)
+        if laje.GlobalId in contagem_clashes_laje and contagem_clashes_laje[laje.GlobalId]['clashes'] >= len(vertices_superiores):
+            resultado, espessura = verificar_espessura_laje(
+                laje, em_balanco=False)
+            if espessura is not None:
+                if resultado in todas_inconformidades_espessura:
+                    todas_inconformidades_espessura.append(
+                        (resultado, espessura))
+                else:
+                    lajes_espessura_ok.append((laje.GlobalId, espessura))
+
+            lajes_verificadas.append((laje.GlobalId, espessura))
+            lajes_ja_verificadas.add(laje.GlobalId)
 
 # Exibir resultados
 print(f"Total de lajes verificadas: {len(lajes_verificadas)}")
@@ -183,3 +224,10 @@ if todas_inconformidades_espessura:
         print(inconformidade)
 else:
     print("Todas as lajes estão de acordo com as regras de espessura.")
+
+# Gerar planilha Excel
+with pd.ExcelWriter(r"C:/Users/jeffe/OneDrive/Documentos/CEFET/MESTRADO/PYTHON/REVIT/resultado_regra34.xlsx", engine='openpyxl') as writer:
+    pd.DataFrame(lajes_verificadas, columns=["Lajes Verificadas", "Espessura"]).to_excel(
+        writer, sheet_name="Lajes Verificadas", index=False)
+    pd.DataFrame(todas_inconformidades_espessura, columns=["Lajes em Desacordo", "Espessura"]).to_excel(
+        writer, sheet_name="Lajes em Desacordo", index=False)
