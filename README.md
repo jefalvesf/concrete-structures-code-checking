@@ -1,6 +1,7 @@
 # UMA ABORDAGEM openBIM E OPEN-SOURCE PARA VERIFICAÇÃO  AUTOMÁTICA DE CONFORMIDADE EM PROJETOS DE ESTRUTURAS DE CONCRETO ARMADO
 
 #PT 
+
 Autor: Jefferson Alves Ferreira 
 Orientadores: Dra Renata Gomes Lanna da Silva e Dr Miguel Ângelo Dias Azenha 
 
