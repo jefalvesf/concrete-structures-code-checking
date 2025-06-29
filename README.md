@@ -22,6 +22,7 @@ https://sig.cefetmg.br/sigaa/public/programa/defesas.jsf?lc=pt_BR&id=303
 
 
 #ENG:
+
 Author: Jefferson Alves Ferreira
 Advisors: Dr. Renata Gomes Lanna da Silva and Dr. Miguel Ângelo Dias Azenha
 
